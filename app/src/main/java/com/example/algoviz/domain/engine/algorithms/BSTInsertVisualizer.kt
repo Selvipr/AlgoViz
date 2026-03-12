@@ -28,7 +28,8 @@ class BSTInsertVisualizer : AlgorithmVisualizer {
             steps.add(
                 VisualizationStep(
                     state = VisualizationState.TreeState(root = cloneTree(root)),
-                    explanation = "Preparing to insert value: $value."
+                    explanation = "Preparing to insert value: $value.",
+                    activeLine = 1
                 )
             )
 
@@ -40,7 +41,8 @@ class BSTInsertVisualizer : AlgorithmVisualizer {
                             root = cloneTree(root),
                             foundNode = root.id
                         ),
-                        explanation = "Tree is empty. Inserting $value as the root node."
+                        explanation = "Tree is empty. Inserting $value as the root node.",
+                        activeLine = 3
                     )
                 )
                 continue
@@ -55,7 +57,8 @@ class BSTInsertVisualizer : AlgorithmVisualizer {
                             root = cloneTree(root),
                             comparingNode = curr.id
                         ),
-                        explanation = "Comparing $value to ${curr.value}."
+                        explanation = "Comparing $value to ${curr.value}.",
+                        activeLine = 4
                     )
                 )
 
@@ -67,7 +70,8 @@ class BSTInsertVisualizer : AlgorithmVisualizer {
                                     root = cloneTree(root),
                                     comparingNode = curr.id
                                 ),
-                                explanation = "$value is less than ${curr.value}, and the left child is empty. Inserting here."
+                                explanation = "$value is less than ${curr.value}, and the left child is empty. Inserting here.",
+                                activeLine = 5
                             )
                         )
                         val newNode = TreeNode(id = currentId++, value = value)
@@ -90,7 +94,8 @@ class BSTInsertVisualizer : AlgorithmVisualizer {
                                     root = cloneTree(root),
                                     comparingNode = curr.id
                                 ),
-                                explanation = "$value is less than ${curr.value}. Traversing down the left subtree."
+                                explanation = "$value is less than ${curr.value}. Traversing down the left subtree.",
+                                activeLine = 5
                             )
                         )
                         curr = curr.left!!
@@ -103,7 +108,8 @@ class BSTInsertVisualizer : AlgorithmVisualizer {
                                     root = cloneTree(root),
                                     comparingNode = curr.id
                                 ),
-                                explanation = "$value is greater than ${curr.value}, and the right child is empty. Inserting here."
+                                explanation = "$value is greater than ${curr.value}, and the right child is empty. Inserting here.",
+                                activeLine = 7
                             )
                         )
                         val newNode = TreeNode(id = currentId++, value = value)
@@ -126,7 +132,8 @@ class BSTInsertVisualizer : AlgorithmVisualizer {
                                     root = cloneTree(root),
                                     comparingNode = curr.id
                                 ),
-                                explanation = "$value is greater than ${curr.value}. Traversing down the right subtree."
+                                explanation = "$value is greater than ${curr.value}. Traversing down the right subtree.",
+                                activeLine = 7
                             )
                         )
                         curr = curr.right!!

@@ -1,15 +1,18 @@
 package com.example.algoviz.domain.engine.algorithms
 
+import com.example.algoviz.domain.engine.ActionType
 import com.example.algoviz.domain.engine.AlgorithmVisualizer
+import com.example.algoviz.domain.engine.VisualNode
 import com.example.algoviz.domain.engine.VisualizationState
 import com.example.algoviz.domain.engine.VisualizationStep
+import java.util.UUID
 
 class BubbleSortVisualizer : AlgorithmVisualizer {
 
     override fun visualize(initialData: Any): List<VisualizationStep> {
         val initialArray = initialData as? List<Int> ?: throw IllegalArgumentException("BubbleSort requires List<Int>")
         val steps = mutableListOf<VisualizationStep>()
-        val arr = initialArray.toMutableList()
+        val arr = initialArray.map { VisualNode(UUID.randomUUID().toString(), it) }.toMutableList()
         val n = arr.size
         val sortedIndices = mutableSetOf<Int>()
 
@@ -17,7 +20,9 @@ class BubbleSortVisualizer : AlgorithmVisualizer {
         steps.add(
             VisualizationStep(
                 state = VisualizationState.ArrayState(array = arr.toList()),
-                explanation = "Starting Bubble Sort on a ${n}-element array."
+                explanation = "Starting Bubble Sort on a ${n}-element array.",
+                action = ActionType.IDLE,
+                activeLine = 1 // Assuming 1 is function def
             )
         )
 
@@ -32,11 +37,13 @@ class BubbleSortVisualizer : AlgorithmVisualizer {
                             comparingIndices = listOf(j, j + 1),
                             sortedIndices = sortedIndices.toSet()
                         ),
-                        explanation = "Comparing element at index $j (${arr[j]}) with index ${j + 1} (${arr[j + 1]})."
+                        explanation = "Comparing element at index $j (${arr[j].value}) with index ${j + 1} (${arr[j + 1].value}).",
+                        action = ActionType.COMPARE,
+                        activeLine = 3 // Assuming 3 is interior loop condition / comparison
                     )
                 )
 
-                if (arr[j] > arr[j + 1]) {
+                if (arr[j].value > arr[j + 1].value) {
                     // Swap
                     val temp = arr[j]
                     arr[j] = arr[j + 1]
@@ -52,7 +59,9 @@ class BubbleSortVisualizer : AlgorithmVisualizer {
                                 swapped = true,
                                 sortedIndices = sortedIndices.toSet()
                             ),
-                            explanation = "Since ${arr[j + 1]} > ${arr[j]}, we swap them."
+                            explanation = "Since ${arr[j + 1].value} > ${arr[j].value}, we swap them.",
+                            action = ActionType.SWAP,
+                            activeLine = 4 // Assuming 4 is the swap operation
                         )
                     )
                 } else {
@@ -64,7 +73,9 @@ class BubbleSortVisualizer : AlgorithmVisualizer {
                                 swapped = false,
                                 sortedIndices = sortedIndices.toSet()
                             ),
-                            explanation = "Since ${arr[j]} <= ${arr[j + 1]}, no swap is needed."
+                            explanation = "Since ${arr[j].value} <= ${arr[j + 1].value}, no swap is needed.",
+                            action = ActionType.IDLE,
+                            activeLine = 5
                         )
                     )
                 }
@@ -79,7 +90,9 @@ class BubbleSortVisualizer : AlgorithmVisualizer {
                         array = arr.toList(),
                         sortedIndices = sortedIndices.toSet()
                     ),
-                    explanation = "Pass complete. Element ${arr[finalPos]} is now in its final sorted position."
+                    explanation = "Pass complete. Element ${arr[finalPos].value} is now in its final sorted position.",
+                    action = ActionType.HIGHLIGHT,
+                    activeLine = 2 // Outer loop increment
                 )
             )
             
@@ -95,7 +108,9 @@ class BubbleSortVisualizer : AlgorithmVisualizer {
                             array = arr.toList(),
                             sortedIndices = sortedIndices.toSet()
                         ),
-                        explanation = "No swaps occurred in this pass. The array is fully sorted early!"
+                        explanation = "No swaps occurred in this pass. The array is fully sorted early!",
+                        action = ActionType.SOLVED,
+                        activeLine = 8 // break
                     )
                 )
                 break
@@ -110,7 +125,9 @@ class BubbleSortVisualizer : AlgorithmVisualizer {
                     array = arr.toList(),
                     sortedIndices = sortedIndices.toSet()
                 ),
-                explanation = "Bubble Sort is complete! The array is fully sorted."
+                explanation = "Bubble Sort is complete! The array is fully sorted.",
+                action = ActionType.SOLVED,
+                activeLine = 9 // return
             )
         )
 

@@ -10,7 +10,7 @@ sealed class VisualizationState {
      * Represents a standard 1D Array or List layout.
      */
     data class ArrayState(
-        val array: List<Int>,
+        val array: List<VisualNode>,
         val comparingIndices: List<Int> = emptyList(),
         val swapped: Boolean = false,
         val sortedIndices: Set<Int> = emptySet()
@@ -38,7 +38,8 @@ sealed class VisualizationState {
     ) : VisualizationState()
 }
 
-// Support definitions for Graphs and Trees
+// Support definitions for Arrays, Graphs and Trees
+data class VisualNode(val id: String, val value: Int)
 data class GraphNode(val id: Int, val value: String = id.toString())
 data class GraphEdge(val from: Int, val to: Int, val weight: String? = null, val isDirected: Boolean = false)
 

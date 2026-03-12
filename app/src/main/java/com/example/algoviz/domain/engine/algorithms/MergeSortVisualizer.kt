@@ -1,8 +1,11 @@
 package com.example.algoviz.domain.engine.algorithms
 
+import com.example.algoviz.domain.engine.ActionType
 import com.example.algoviz.domain.engine.AlgorithmVisualizer
+import com.example.algoviz.domain.engine.VisualNode
 import com.example.algoviz.domain.engine.VisualizationState
 import com.example.algoviz.domain.engine.VisualizationStep
+import java.util.UUID
 
 class MergeSortVisualizer : AlgorithmVisualizer {
 
@@ -12,12 +15,13 @@ class MergeSortVisualizer : AlgorithmVisualizer {
             ?: throw IllegalArgumentException("Merge Sort expects List<Int>")
 
         val steps = mutableListOf<VisualizationStep>()
-        val arr = array.toIntArray()
+        val arr = array.map { VisualNode(UUID.randomUUID().toString(), it) }.toTypedArray()
         
         steps.add(
             VisualizationStep(
                 state = VisualizationState.ArrayState(array = arr.toList()),
-                explanation = "Initializing Merge Sort with an array of ${arr.size} elements."
+                explanation = "Initializing Merge Sort with an array of ${arr.size} elements.",
+                action = ActionType.IDLE
             )
         )
 
@@ -29,14 +33,15 @@ class MergeSortVisualizer : AlgorithmVisualizer {
                     array = arr.toList(),
                     sortedIndices = arr.indices.toSet()
                 ),
-                explanation = "Merge Sort is complete. The array is fully sorted."
+                explanation = "Merge Sort is complete. The array is fully sorted.",
+                action = ActionType.SOLVED
             )
         )
 
         return steps
     }
 
-    private fun mergeSort(arr: IntArray, left: Int, right: Int, steps: MutableList<VisualizationStep>) {
+    private fun mergeSort(arr: Array<VisualNode>, left: Int, right: Int, steps: MutableList<VisualizationStep>) {
         if (left < right) {
             val middle = left + (right - left) / 2
 
@@ -46,7 +51,8 @@ class MergeSortVisualizer : AlgorithmVisualizer {
                         array = arr.toList(),
                         comparingIndices = (left..right).toList()
                     ),
-                    explanation = "Dividing the subarray from index $left to $right at midpoint $middle."
+                    explanation = "Dividing the subarray from index $left to $right at midpoint $middle.",
+                    action = ActionType.HIGHLIGHT
                 )
             )
 
@@ -56,15 +62,12 @@ class MergeSortVisualizer : AlgorithmVisualizer {
         }
     }
 
-    private fun merge(arr: IntArray, left: Int, middle: Int, right: Int, steps: MutableList<VisualizationStep>) {
+    private fun merge(arr: Array<VisualNode>, left: Int, middle: Int, right: Int, steps: MutableList<VisualizationStep>) {
         val n1 = middle - left + 1
         val n2 = right - middle
 
-        val leftArr = IntArray(n1)
-        val rightArr = IntArray(n2)
-
-        for (i in 0 until n1) leftArr[i] = arr[left + i]
-        for (j in 0 until n2) rightArr[j] = arr[middle + 1 + j]
+        val leftArr = Array(n1) { arr[left + it] }
+        val rightArr = Array(n2) { arr[middle + 1 + it] }
 
         var i = 0
         var j = 0
@@ -76,7 +79,8 @@ class MergeSortVisualizer : AlgorithmVisualizer {
                     array = arr.toList(),
                     comparingIndices = (left..right).toList()
                 ),
-                explanation = "Merging two sorted subarrays: ${leftArr.toList()} and ${rightArr.toList()} back into the main array from index $left to $right."
+                explanation = "Merging two sorted subarrays: ${leftArr.map { it.value }} and ${rightArr.map { it.value }} back into the main array from index $left to $right.",
+                action = ActionType.HIGHLIGHT
             )
         )
 
@@ -87,11 +91,12 @@ class MergeSortVisualizer : AlgorithmVisualizer {
                         array = arr.toList(),
                         comparingIndices = listOf(left + i, middle + 1 + j)
                     ),
-                    explanation = "Comparing left subarray element ${leftArr[i]} with right subarray element ${rightArr[j]}."
+                    explanation = "Comparing left subarray element ${leftArr[i].value} with right subarray element ${rightArr[j].value}.",
+                    action = ActionType.COMPARE
                 )
             )
 
-            if (leftArr[i] <= rightArr[j]) {
+            if (leftArr[i].value <= rightArr[j].value) {
                 arr[k] = leftArr[i]
                 i++
             } else {
@@ -105,7 +110,8 @@ class MergeSortVisualizer : AlgorithmVisualizer {
                         comparingIndices = listOf(k),
                         swapped = true
                     ),
-                    explanation = "Placed ${arr[k]} at index $k."
+                    explanation = "Placed ${arr[k].value} at index $k.",
+                    action = ActionType.SWAP
                 )
             )
             k++
@@ -119,7 +125,8 @@ class MergeSortVisualizer : AlgorithmVisualizer {
                         array = arr.toList(),
                         comparingIndices = listOf(k)
                     ),
-                    explanation = "Copying remaining element ${arr[k]} from the left subarray."
+                    explanation = "Copying remaining element ${arr[k].value} from the left subarray.",
+                    action = ActionType.SWAP
                 )
             )
             i++
@@ -134,7 +141,8 @@ class MergeSortVisualizer : AlgorithmVisualizer {
                         array = arr.toList(),
                         comparingIndices = listOf(k)
                     ),
-                    explanation = "Copying remaining element ${arr[k]} from the right subarray."
+                    explanation = "Copying remaining element ${arr[k].value} from the right subarray.",
+                    action = ActionType.SWAP
                 )
             )
             j++

@@ -248,7 +248,7 @@ private fun ProfileStats(user: User) {
     ) {
         ProfileStatCard(
             modifier = Modifier.weight(1f),
-            value = "0", // TODO: Fetch solved count from Submissions table
+            value = (user.xp / 20).toString(),
             label = "Solved",
             icon = Icons.Filled.Star,
             color = MintAccent,

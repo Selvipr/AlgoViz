@@ -7,5 +7,6 @@ data class AlgorithmInfo(
     val timeComplexity: String,
     val spaceComplexity: String,
     val useCases: String,
-    val youtubeVideoId: String
+    val youtubeVideoId: String,
+    val pseudoCode: String = ""
 )

@@ -1,8 +1,11 @@
 package com.example.algoviz.domain.engine.algorithms
 
+import com.example.algoviz.domain.engine.ActionType
 import com.example.algoviz.domain.engine.AlgorithmVisualizer
+import com.example.algoviz.domain.engine.VisualNode
 import com.example.algoviz.domain.engine.VisualizationState
 import com.example.algoviz.domain.engine.VisualizationStep
+import java.util.UUID
 
 class QuickSortVisualizer : AlgorithmVisualizer {
 
@@ -12,12 +15,13 @@ class QuickSortVisualizer : AlgorithmVisualizer {
             ?: throw IllegalArgumentException("Quick Sort expects List<Int>")
 
         val steps = mutableListOf<VisualizationStep>()
-        val arr = array.toIntArray()
+        val arr = array.map { VisualNode(UUID.randomUUID().toString(), it) }.toTypedArray()
 
         steps.add(
             VisualizationStep(
                 state = VisualizationState.ArrayState(array = arr.toList()),
-                explanation = "Initializing Quick Sort."
+                explanation = "Initializing Quick Sort.",
+                action = ActionType.IDLE
             )
         )
 
@@ -29,14 +33,15 @@ class QuickSortVisualizer : AlgorithmVisualizer {
                     array = arr.toList(),
                     sortedIndices = arr.indices.toSet()
                 ),
-                explanation = "Quick Sort is complete. The array is fully sorted."
+                explanation = "Quick Sort is complete. The array is fully sorted.",
+                action = ActionType.SOLVED
             )
         )
 
         return steps
     }
 
-    private fun quickSort(arr: IntArray, low: Int, high: Int, steps: MutableList<VisualizationStep>) {
+    private fun quickSort(arr: Array<VisualNode>, low: Int, high: Int, steps: MutableList<VisualizationStep>) {
         if (low < high) {
             val pivotIndex = partition(arr, low, high, steps)
             
@@ -46,7 +51,8 @@ class QuickSortVisualizer : AlgorithmVisualizer {
                         array = arr.toList(),
                         sortedIndices = setOf(pivotIndex)
                     ),
-                    explanation = "Pivot ${arr[pivotIndex]} is now in its correct sorted position."
+                    explanation = "Pivot ${arr[pivotIndex].value} is now in its correct sorted position.",
+                    action = ActionType.HIGHLIGHT
                 )
             )
 
@@ -55,8 +61,8 @@ class QuickSortVisualizer : AlgorithmVisualizer {
         }
     }
 
-    private fun partition(arr: IntArray, low: Int, high: Int, steps: MutableList<VisualizationStep>): Int {
-        val pivot = arr[high]
+    private fun partition(arr: Array<VisualNode>, low: Int, high: Int, steps: MutableList<VisualizationStep>): Int {
+        val pivotNode = arr[high]
         var i = low - 1
 
         steps.add(
@@ -65,7 +71,8 @@ class QuickSortVisualizer : AlgorithmVisualizer {
                     array = arr.toList(),
                     comparingIndices = listOf(high)
                 ),
-                explanation = "Selecting $pivot as the pivot element."
+                explanation = "Selecting ${pivotNode.value} as the pivot element.",
+                action = ActionType.COMPARE
             )
         )
 
@@ -76,17 +83,17 @@ class QuickSortVisualizer : AlgorithmVisualizer {
                         array = arr.toList(),
                         comparingIndices = listOf(j, high)
                     ),
-                    explanation = "Comparing ${arr[j]} with pivot $pivot."
+                    explanation = "Comparing ${arr[j].value} with pivot ${pivotNode.value}.",
+                    action = ActionType.COMPARE
                 )
             )
 
-            if (arr[j] < pivot) {
+            if (arr[j].value < pivotNode.value) {
                 i++
                 if (i != j) {
                     val temp = arr[i]
                     arr[i] = arr[j]
                     arr[j] = temp
-                    
                     steps.add(
                         VisualizationStep(
                             state = VisualizationState.ArrayState(
@@ -94,7 +101,8 @@ class QuickSortVisualizer : AlgorithmVisualizer {
                                 comparingIndices = listOf(i, j),
                                 swapped = true
                             ),
-                            explanation = "${arr[i]} is less than $pivot. Swapping with the element at index $i."
+                            explanation = "${arr[j].value} is less than ${pivotNode.value}. Swapping with the element at index $i.",
+                            action = ActionType.SWAP
                         )
                     )
                 }
@@ -112,7 +120,8 @@ class QuickSortVisualizer : AlgorithmVisualizer {
                     comparingIndices = listOf(i + 1, high),
                     swapped = true
                 ),
-                explanation = "Moving the pivot $pivot into its final place by swapping with ${arr[high]}."
+                explanation = "Moving the pivot ${pivotNode.value} into its final place by swapping with ${arr[high].value}.",
+                action = ActionType.SWAP
             )
         )
 

@@ -2,6 +2,7 @@ package com.example.algoviz.ui.screens.visualize
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.algoviz.domain.engine.ActionType
 import com.example.algoviz.domain.engine.AlgorithmDataProvider
 import com.example.algoviz.domain.engine.AlgorithmInfo
 import com.example.algoviz.domain.engine.AlgorithmVisualizer
@@ -135,7 +136,15 @@ class VisualizationViewModel : ViewModel() {
                 val state = _uiState.value
                 val delayTime = (baseDelayMs / state.playbackSpeed).toLong()
                 
-                delay(delayTime)
+                // Add micro-pauses based on the action being performed
+                val adjustedDelay = when (state.currentStep?.action) {
+                    ActionType.SWAP -> (delayTime * 1.5).toLong()
+                    ActionType.HIGHLIGHT -> (delayTime * 1.5).toLong()
+                    ActionType.SOLVED -> delayTime * 2
+                    else -> delayTime
+                }
+
+                delay(adjustedDelay)
 
                 if (state.currentStepIndex < state.steps.size - 1) {
                     _uiState.update { it.copy(currentStepIndex = it.currentStepIndex + 1) }
@@ -179,6 +188,19 @@ class VisualizationViewModel : ViewModel() {
         // If already playing, restart loop to pick up new speed immediately
         if (_uiState.value.isPlaying) {
             startPlayback()
+        }
+    }
+
+    fun scrubTo(stepIndex: Int) {
+        stopPlayback()
+        _uiState.update { state ->
+            if (stepIndex in state.steps.indices) {
+                state.copy(
+                    currentStepIndex = stepIndex,
+                    isComplete = stepIndex == state.steps.size - 1,
+                    isPlaying = false
+                )
+            } else state
         }
     }
 }

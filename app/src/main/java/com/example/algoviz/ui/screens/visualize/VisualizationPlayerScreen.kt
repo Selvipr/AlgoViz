@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
@@ -47,6 +50,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.algoviz.domain.engine.VisualizationState
@@ -54,6 +59,7 @@ import com.example.algoviz.ui.screens.visualize.components.ArrayCanvas
 import com.example.algoviz.ui.screens.visualize.components.GraphCanvas
 import com.example.algoviz.ui.screens.visualize.components.TreeCanvas
 import com.example.algoviz.ui.theme.DeepNavy
+import com.example.algoviz.ui.theme.InfoBlue
 import com.example.algoviz.ui.theme.MintAccent
 import com.example.algoviz.ui.theme.OrangeAccent
 
@@ -152,6 +158,55 @@ fun VisualizationPlayerScreen(
                 )
             }
 
+            // Pseudo-Code Sync View
+            val pseudoCode = uiState.algorithmInfo?.pseudoCode
+            if (!pseudoCode.isNullOrEmpty()) {
+                val lines = pseudoCode.lines()
+                val activeLineIndex = uiState.currentStep?.activeLine?.minus(1) // 1-indexed to 0-indexed
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(0.5f)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    val listState = rememberLazyListState()
+
+                    LaunchedEffect(activeLineIndex) {
+                        if (activeLineIndex != null && activeLineIndex in lines.indices) {
+                            listState.animateScrollToItem(activeLineIndex)
+                        }
+                    }
+
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize().padding(12.dp)
+                    ) {
+                        itemsIndexed(lines) { index, line ->
+                            val isActive = index == activeLineIndex
+                            Text(
+                                text = line,
+                                style = androidx.compose.ui.text.TextStyle(
+                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                    fontSize = 12.sp,
+                                    color = if (isActive) DeepNavy else MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        if (isActive) MintAccent else Color.Transparent,
+                                        RoundedCornerShape(4.dp)
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
             // Controls Area
             Column(
                 modifier = Modifier
@@ -223,12 +278,33 @@ fun VisualizationPlayerScreen(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Progress counter
-                Text(
-                    text = "Step ${uiState.currentStepIndex + 1} of ${maxOf(uiState.steps.size, 1)}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                // Timeline Scrubber
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "Step", style = MaterialTheme.typography.labelSmall)
+                    
+                    val maxSteps = maxOf(uiState.steps.size - 1, 0).toFloat()
+                    Slider(
+                        value = uiState.currentStepIndex.toFloat(),
+                        onValueChange = { viewModel.scrubTo(it.toInt()) },
+                        valueRange = 0f..maxSteps,
+                        steps = maxOf(uiState.steps.size - 2, 0),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 16.dp),
+                        colors = SliderDefaults.colors(
+                            thumbColor = OrangeAccent,
+                            activeTrackColor = OrangeAccent
+                        )
+                    )
+                    
+                    Text(
+                        text = "${uiState.currentStepIndex + 1}/${maxOf(uiState.steps.size, 1)}",
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
             }
         }
     }

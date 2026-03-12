@@ -1,9 +1,11 @@
 package com.example.algoviz.di
 
 import com.example.algoviz.data.repository.AuthRepositoryImpl
+import com.example.algoviz.data.repository.SettingsRepositoryImpl
 import com.example.algoviz.data.repository.TopicRepositoryImpl
 import com.example.algoviz.data.repository.UserRepositoryImpl
 import com.example.algoviz.domain.repository.AuthRepository
+import com.example.algoviz.domain.repository.SettingsRepository
 import com.example.algoviz.domain.repository.TopicRepository
 import com.example.algoviz.domain.repository.UserRepository
 import dagger.Binds
@@ -27,4 +29,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindTopicRepository(impl: TopicRepositoryImpl): TopicRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository
 }

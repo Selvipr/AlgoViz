@@ -21,9 +21,13 @@ import com.example.algoviz.domain.engine.AlgorithmDataProvider
 import com.example.algoviz.ui.theme.DeepNavy
 import com.example.algoviz.ui.theme.MintAccent
 import com.example.algoviz.ui.theme.OrangeAccent
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
+import android.annotation.SuppressLint
+import android.view.View
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,17 +76,56 @@ fun LearnDetailScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             // YouTube Player
-            AndroidView(
-                factory = { context ->
-                    YouTubePlayerView(context).apply {
-                        lifecycleOwner.lifecycle.addObserver(this)
-                        addYouTubePlayerListener(object : AbstractYouTubePlayerListener() {
-                            override fun onReady(youTubePlayer: YouTubePlayer) {
-                                youTubePlayer.cueVideo(algorithmInfo.youtubeVideoId, 0f)
-                            }
-                        })
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val webView = remember {
+                WebView(context).apply {
+                    @SuppressLint("SetJavaScriptEnabled")
+                    settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
+                    settings.mediaPlaybackRequiresUserGesture = false
+                    webViewClient = android.webkit.WebViewClient()
+                    webChromeClient = WebChromeClient()
+                    
+                    val html = """
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <style>
+                                body { margin: 0; padding: 0; background-color: #000000; }
+                                iframe { width: 100%; height: 100vh; border: none; }
+                            </style>
+                        </head>
+                        <body>
+                            <iframe src="https://www.youtube.com/embed/${algorithmInfo.youtubeVideoId}?autoplay=0&rel=0&modestbranding=1" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen>
+                            </iframe>
+                        </body>
+                        </html>
+                    """.trimIndent()
+                    
+                    loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "utf-8", null)
+                }
+            }
+
+            DisposableEffect(lifecycleOwner) {
+                val observer = LifecycleEventObserver { _, event ->
+                    when (event) {
+                        Lifecycle.Event.ON_PAUSE -> webView.onPause()
+                        Lifecycle.Event.ON_RESUME -> webView.onResume()
+                        Lifecycle.Event.ON_DESTROY -> webView.destroy()
+                        else -> {}
                     }
-                },
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose {
+                    lifecycleOwner.lifecycle.removeObserver(observer)
+                    // The WebView is destroyed when the screen is fully disposed
+                }
+            }
+
+            AndroidView(
+                factory = { webView },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(220.dp)

@@ -43,7 +43,8 @@ class DFSVisualizer : AlgorithmVisualizer {
                     activePathEdges = emptySet(),
                     currentNode = null
                 ),
-                explanation = "Initializing Depth-First Search. Starting at node $startNode."
+                explanation = "Initializing Depth-First Search. Starting at node $startNode.",
+                activeLine = 1
             )
         )
 
@@ -85,7 +86,8 @@ class DFSVisualizer : AlgorithmVisualizer {
                     activePathEdges = activePathEdges.toSet(),
                     currentNode = curr
                 ),
-                explanation = "Node $curr is visited. Now exploring its descendants recursively."
+                explanation = "Node $curr is visited. Now exploring its descendants recursively.",
+                activeLine = 2
             )
         )
 
@@ -102,7 +104,8 @@ class DFSVisualizer : AlgorithmVisualizer {
                         activePathEdges = activePathEdges.toSet(),
                         currentNode = curr
                     ),
-                    explanation = "Looking at edge from $curr to $neighbor."
+                    explanation = "Looking at edge from $curr to $neighbor.",
+                    activeLine = 3
                 )
             )
 
@@ -116,7 +119,8 @@ class DFSVisualizer : AlgorithmVisualizer {
                             activePathEdges = activePathEdges.toSet(),
                             currentNode = neighbor
                         ),
-                        explanation = "Node $neighbor has not been visited. Traversing deeper."
+                        explanation = "Node $neighbor has not been visited. Traversing deeper.",
+                        activeLine = 4
                     )
                 )
 
@@ -132,7 +136,8 @@ class DFSVisualizer : AlgorithmVisualizer {
                             activePathEdges = activePathEdges.toSet(),
                             currentNode = curr
                         ),
-                        explanation = "Backtracking from $neighbor to $curr."
+                        explanation = "Backtracking from $neighbor to $curr.",
+                        activeLine = 5
                     )
                 )
 
@@ -146,7 +151,8 @@ class DFSVisualizer : AlgorithmVisualizer {
                             activePathEdges = activePathEdges.toSet(),
                             currentNode = curr
                         ),
-                        explanation = "Node $neighbor is already visited. Skipping."
+                        explanation = "Node $neighbor is already visited. Skipping.",
+                        activeLine = 4
                     )
                 )
             }

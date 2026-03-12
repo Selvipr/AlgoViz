@@ -41,6 +41,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.algoviz.domain.model.User
 import com.example.algoviz.ui.theme.DeepNavy
 import com.example.algoviz.ui.theme.MintAccent
 import com.example.algoviz.ui.theme.OrangeAccent
@@ -50,6 +53,56 @@ import com.example.algoviz.ui.theme.XPGold
 @Composable
 fun HomeScreen(
     onNavigateToTopic: (String) -> Unit = {},
+    onNavigateToArena: () -> Unit = {},
+    onNavigateToProblem: (String) -> Unit = {},
+    onNavigateToVisualize: (String) -> Unit = {},
+    viewModel: HomeViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (val state = uiState) {
+            is HomeUiState.Loading -> {
+                androidx.compose.material3.CircularProgressIndicator(
+                    color = MintAccent,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            is HomeUiState.Error -> {
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = state.message, color = MaterialTheme.colorScheme.error)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    androidx.compose.material3.Button(
+                        onClick = { viewModel.loadHomeData() },
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MintAccent)
+                    ) {
+                        Text("Retry", color = MaterialTheme.colorScheme.onPrimary)
+                    }
+                }
+            }
+            is HomeUiState.Success -> {
+                HomeContent(
+                    user = state.user,
+                    onNavigateToTopic = onNavigateToTopic,
+                    onNavigateToArena = onNavigateToArena,
+                    onNavigateToProblem = onNavigateToProblem,
+                    onNavigateToVisualize = onNavigateToVisualize
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeContent(
+    user: User,
+    onNavigateToTopic: (String) -> Unit,
+    onNavigateToArena: () -> Unit,
+    onNavigateToProblem: (String) -> Unit,
+    onNavigateToVisualize: (String) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -60,27 +113,42 @@ fun HomeScreen(
     ) {
         // Greeting Header
         item {
-            GreetingSection()
+            GreetingSection(user.fullName ?: user.username.ifBlank { "Solver" })
         }
 
         // Streak & XP Stats
         item {
-            StatsRow()
+            StatsRow(
+                streak = user.streak,
+                xp = user.xp,
+                tier = user.tier.replaceFirstChar { it.uppercase() }
+            )
         }
 
         // Daily Challenge Card
         item {
-            DailyChallengeCard()
+            DailyChallengeCard(
+                onClick = { onNavigateToProblem("two_sum") }
+            )
         }
 
         // Quick Actions
         item {
-            QuickActionsSection()
+            QuickActionsSection(
+                onResumeLesson = { onNavigateToTopic("searching") },
+                onTodayContest = onNavigateToArena,
+                onRandomProblem = {
+                    val randomProblemId = listOf("binary_search", "bubble_sort", "valid_parentheses", "single_number").random()
+                    onNavigateToProblem(randomProblemId)
+                }
+            )
         }
 
         // Recommended Topics
         item {
-            RecommendedSection()
+            RecommendedSection(
+                onTopicClick = onNavigateToVisualize
+            )
         }
 
         // Bottom spacer for nav bar
@@ -91,7 +159,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun GreetingSection() {
+private fun GreetingSection(name: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -104,7 +172,7 @@ private fun GreetingSection() {
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Ready to learn?",
+            text = "Ready to learn, $name?",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -113,7 +181,7 @@ private fun GreetingSection() {
 }
 
 @Composable
-private fun StatsRow() {
+private fun StatsRow(streak: Int, xp: Int, tier: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -121,21 +189,21 @@ private fun StatsRow() {
         StatCard(
             modifier = Modifier.weight(1f),
             icon = Icons.Filled.LocalFireDepartment,
-            value = "0",
+            value = streak.toString(),
             label = "Day Streak",
             iconColor = StreakFlame,
         )
         StatCard(
             modifier = Modifier.weight(1f),
             icon = Icons.Filled.TrendingUp,
-            value = "0",
-            label = "XP Today",
+            value = xp.toString(),
+            label = "Total XP",
             iconColor = XPGold,
         )
         StatCard(
             modifier = Modifier.weight(1f),
             icon = Icons.Filled.EmojiEvents,
-            value = "Novice",
+            value = tier,
             label = "Tier",
             iconColor = MintAccent,
         )
@@ -184,8 +252,10 @@ private fun StatCard(
 }
 
 @Composable
-private fun DailyChallengeCard() {
+private fun DailyChallengeCard(onClick: () -> Unit) {
     Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
@@ -264,7 +334,11 @@ private fun Chip(text: String, color: androidx.compose.ui.graphics.Color) {
 }
 
 @Composable
-private fun QuickActionsSection() {
+private fun QuickActionsSection(
+    onResumeLesson: () -> Unit,
+    onTodayContest: () -> Unit,
+    onRandomProblem: () -> Unit
+) {
     Column {
         Text(
             text = "Quick Actions",
@@ -282,18 +356,21 @@ private fun QuickActionsSection() {
                 icon = Icons.Filled.PlayArrow,
                 title = "Resume\nLesson",
                 color = MintAccent,
+                onClick = onResumeLesson
             )
             QuickActionCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Filled.EmojiEvents,
                 title = "Today's\nContest",
                 color = OrangeAccent,
+                onClick = onTodayContest
             )
             QuickActionCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Filled.Shuffle,
                 title = "Random\nProblem",
                 color = MaterialTheme.colorScheme.tertiary,
+                onClick = onRandomProblem
             )
         }
     }
@@ -305,9 +382,11 @@ private fun QuickActionCard(
     icon: ImageVector,
     title: String,
     color: androidx.compose.ui.graphics.Color,
+    onClick: () -> Unit
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
+        onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = color.copy(alpha = 0.1f),
@@ -343,7 +422,7 @@ private fun QuickActionCard(
 }
 
 @Composable
-private fun RecommendedSection() {
+private fun RecommendedSection(onTopicClick: (String) -> Unit) {
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -356,9 +435,6 @@ private fun RecommendedSection() {
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
             )
-            TextButton(onClick = {}) {
-                Text("See All", color = MintAccent)
-            }
         }
         Spacer(modifier = Modifier.height(8.dp))
         LazyRow(
@@ -366,14 +442,19 @@ private fun RecommendedSection() {
         ) {
             items(5) { index ->
                 val topics = listOf(
-                    "Binary Search" to "Searching",
-                    "Merge Sort" to "Sorting",
-                    "Graph BFS" to "Graph",
-                    "DP Knapsack" to "Dynamic Programming",
-                    "AVL Trees" to "Trees",
+                    Triple("binary_search", "Binary Search", "Searching"),
+                    Triple("merge_sort", "Merge Sort", "Sorting"),
+                    Triple("bfs", "Graph BFS", "Graph"),
+                    Triple("linear_search", "Linear Search", "Searching"),
+                    Triple("quick_sort", "Quick Sort", "Sorting"),
                 )
-                val (name, category) = topics[index]
-                TopicCard(name = name, category = category, progress = 0f)
+                val (id, name, category) = topics[index]
+                TopicCard(
+                    name = name, 
+                    category = category, 
+                    progress = 0f,
+                    onClick = { onTopicClick(id) }
+                )
             }
         }
     }
@@ -384,9 +465,11 @@ private fun TopicCard(
     name: String,
     category: String,
     progress: Float,
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier.width(160.dp),
+        onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,

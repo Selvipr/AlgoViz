@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
@@ -45,13 +46,8 @@ import com.example.algoviz.ui.theme.DifficultyEasy
 import com.example.algoviz.ui.theme.DifficultyHard
 import com.example.algoviz.ui.theme.DifficultyMedium
 import com.example.algoviz.ui.theme.MintAccent
-
-data class ProblemItem(
-    val title: String,
-    val difficulty: String,
-    val topics: List<String>,
-    val acceptanceRate: String,
-)
+import com.example.algoviz.domain.engine.ArenaDataProvider
+import com.example.algoviz.domain.engine.ArenaProblem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,24 +56,19 @@ fun ArenaScreen(
 ) {
     val difficulties = listOf("All", "Easy", "Medium", "Hard")
     var selectedDifficulty by remember { mutableStateOf("All") }
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchActive by remember { mutableStateOf(false) }
 
-    val problems = remember {
-        listOf(
-            ProblemItem("Two Sum", "Easy", listOf("Array", "Hash Map"), "78%"),
-            ProblemItem("Add Two Numbers", "Medium", listOf("Linked List"), "42%"),
-            ProblemItem("Longest Substring", "Medium", listOf("String", "Sliding Window"), "35%"),
-            ProblemItem("Median of Two Arrays", "Hard", listOf("Binary Search"), "38%"),
-            ProblemItem("Valid Parentheses", "Easy", listOf("Stack"), "82%"),
-            ProblemItem("Merge Intervals", "Medium", listOf("Array", "Sorting"), "48%"),
-            ProblemItem("Binary Tree Inorder", "Easy", listOf("Tree", "Stack"), "75%"),
-            ProblemItem("LRU Cache", "Medium", listOf("Hash Map", "Linked List"), "41%"),
-            ProblemItem("Trapping Rain Water", "Hard", listOf("Stack", "Two Pointer"), "60%"),
-            ProblemItem("Coin Change", "Medium", listOf("DP"), "43%"),
-        )
+    val problems = remember { ArenaDataProvider.problems }
+
+    val filteredProblems = problems.filter { problem ->
+        val matchesDifficulty = selectedDifficulty == "All" || problem.difficulty == selectedDifficulty
+        val matchesSearch = searchQuery.isBlank() || 
+            problem.title.contains(searchQuery, ignoreCase = true) || 
+            problem.topics.any { it.contains(searchQuery, ignoreCase = true) }
+        
+        matchesDifficulty && matchesSearch
     }
-
-    val filteredProblems = if (selectedDifficulty == "All") problems
-        else problems.filter { it.difficulty == selectedDifficulty }
 
     Column(
         modifier = Modifier
@@ -86,18 +77,44 @@ fun ArenaScreen(
     ) {
         TopAppBar(
             title = {
-                Text(
-                    text = "Practice Arena",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                )
+                if (isSearchActive) {
+                    androidx.compose.material3.TextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Search problems...") },
+                        singleLine = true,
+                        colors = androidx.compose.material3.TextFieldDefaults.colors(
+                            focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                            disabledContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    Text(
+                        text = "Practice Arena",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             },
             actions = {
-                IconButton(onClick = {}) {
-                    Icon(Icons.Filled.EmojiEvents, contentDescription = "Leaderboard")
-                }
-                IconButton(onClick = {}) {
-                    Icon(Icons.Filled.Search, contentDescription = "Search")
+                if (isSearchActive) {
+                    IconButton(onClick = { 
+                        isSearchActive = false
+                        searchQuery = ""
+                    }) {
+                        Icon(Icons.Filled.Close, contentDescription = "Close Search")
+                    }
+                } else {
+                    IconButton(onClick = {}) {
+                        Icon(Icons.Filled.EmojiEvents, contentDescription = "Leaderboard")
+                    }
+                    IconButton(onClick = { isSearchActive = true }) {
+                        Icon(Icons.Filled.Search, contentDescription = "Search")
+                    }
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
@@ -147,7 +164,7 @@ fun ArenaScreen(
 
             // Problem list
             items(filteredProblems) { problem ->
-                ProblemCard(problem = problem, onClick = { onNavigateToProblem("") })
+                ProblemCard(problem = problem, onClick = { onNavigateToProblem(problem.id) })
             }
 
             item { Spacer(modifier = Modifier.height(80.dp)) }
@@ -157,7 +174,7 @@ fun ArenaScreen(
 
 @Composable
 private fun ProblemCard(
-    problem: ProblemItem,
+    problem: ArenaProblem,
     onClick: () -> Unit,
 ) {
     val difficultyColor = when (problem.difficulty) {
@@ -222,12 +239,6 @@ private fun ProblemCard(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    text = "${problem.acceptanceRate} acc.",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
     }

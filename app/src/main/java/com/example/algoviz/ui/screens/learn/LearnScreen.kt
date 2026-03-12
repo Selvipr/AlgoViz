@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountTree
 import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DataArray
 import androidx.compose.material.icons.filled.Hub
@@ -96,6 +97,18 @@ fun LearnScreen(
 
     val tracks = listOf("All", "Beginner", "Intermediate", "Advanced")
     var selectedTrack by remember { mutableStateOf("All") }
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchActive by remember { mutableStateOf(false) }
+
+    val filteredCategories = categories.mapNotNull { category ->
+        val filteredAlgos = category.algorithms.filter { algoId ->
+            val info = com.example.algoviz.domain.engine.AlgorithmDataProvider.algorithmInfoMap[algoId]
+            info != null && (searchQuery.isBlank() || 
+                info.title.contains(searchQuery, ignoreCase = true) || 
+                category.name.contains(searchQuery, ignoreCase = true))
+        }
+        if (filteredAlgos.isEmpty()) null else category.copy(algorithms = filteredAlgos)
+    }
 
     Column(
         modifier = Modifier
@@ -104,15 +117,41 @@ fun LearnScreen(
     ) {
         TopAppBar(
             title = {
-                Text(
-                    text = "Learn DSA",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                )
+                if (isSearchActive) {
+                    androidx.compose.material3.TextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Search topics...") },
+                        singleLine = true,
+                        colors = androidx.compose.material3.TextFieldDefaults.colors(
+                            focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                            disabledContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    Text(
+                        text = "Learn DSA",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             },
             actions = {
-                IconButton(onClick = {}) {
-                    Icon(Icons.Filled.Search, contentDescription = "Search")
+                if (isSearchActive) {
+                    IconButton(onClick = { 
+                        isSearchActive = false
+                        searchQuery = ""
+                    }) {
+                        Icon(Icons.Filled.Close, contentDescription = "Close Search")
+                    }
+                } else {
+                    IconButton(onClick = { isSearchActive = true }) {
+                        Icon(Icons.Filled.Search, contentDescription = "Search")
+                    }
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
@@ -157,7 +196,7 @@ fun LearnScreen(
                 )
             }
 
-            items(categories) { category ->
+            items(filteredCategories) { category ->
                 CategoryBlock(category = category, onNavigateToTopic = onNavigateToTopic)
             }
 

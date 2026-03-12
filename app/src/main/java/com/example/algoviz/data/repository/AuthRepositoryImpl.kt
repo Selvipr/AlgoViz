@@ -6,6 +6,7 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.Flow
@@ -22,9 +23,16 @@ class AuthRepositoryImpl @Inject constructor(
         it is SessionStatus.Authenticated
     }
 
-    override suspend fun signInWithGoogle(): Result<Unit> {
+    override suspend fun signInWithGoogle(idToken: String): Result<Unit> {
         return try {
-            supabaseClient.auth.signInWith(Google)
+            if (idToken.isNotEmpty()) {
+                supabaseClient.auth.signInWith(IDToken) {
+                    provider = Google
+                    this.idToken = idToken
+                }
+            } else {
+                supabaseClient.auth.signInWith(Google)
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

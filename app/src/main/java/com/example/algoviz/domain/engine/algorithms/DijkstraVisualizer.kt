@@ -50,7 +50,8 @@ class DijkstraVisualizer : AlgorithmVisualizer {
                     activePathEdges = emptySet(),
                     currentNode = null
                 ),
-                explanation = "Initializing Dijkstra's Algorithm. Starting at node $startNode with distance 0. All other nodes have distance ∞."
+                explanation = "Initializing Dijkstra's Algorithm. Starting at node $startNode with distance 0. All other nodes have distance ∞.",
+                activeLine = 2
             )
         )
 
@@ -70,7 +71,8 @@ class DijkstraVisualizer : AlgorithmVisualizer {
                         activePathEdges = activePathEdges.toSet(),
                         currentNode = currNode
                     ),
-                    explanation = "Node $currNode is extracted from the Priority Queue with the shortest known distance: $currDist."
+                    explanation = "Node $currNode is extracted from the Priority Queue with the shortest known distance: $currDist.",
+                    activeLine = 8
                 )
             )
 
@@ -93,7 +95,8 @@ class DijkstraVisualizer : AlgorithmVisualizer {
                             activePathEdges = activePathEdges.toSet(),
                             currentNode = currNode
                         ),
-                        explanation = "Evaluating edge to node $nextNode with weight $weight."
+                        explanation = "Evaluating edge to node $nextNode with weight $weight.",
+                        activeLine = 9
                     )
                 )
 
@@ -113,7 +116,8 @@ class DijkstraVisualizer : AlgorithmVisualizer {
                                 activePathEdges = activePathEdges.toSet(),
                                 currentNode = nextNode
                             ),
-                            explanation = "Found a shorter path to $nextNode (Distance: $newDist). Updating and adding to queue."
+                            explanation = "Found a shorter path to $nextNode (Distance: $newDist). Updating and adding to queue.",
+                            activeLine = 11
                         )
                     )
                 } else {
@@ -126,7 +130,8 @@ class DijkstraVisualizer : AlgorithmVisualizer {
                                 activePathEdges = activePathEdges.toSet(),
                                 currentNode = nextNode
                             ),
-                            explanation = "Path to $nextNode (Distance: $newDist) is not shorter than the known path ($oldDist). Ignoring."
+                            explanation = "Path to $nextNode (Distance: $newDist) is not shorter than the known path ($oldDist). Ignoring.",
+                            activeLine = 10
                         )
                     )
                 }

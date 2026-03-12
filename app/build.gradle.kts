@@ -42,6 +42,9 @@ android {
         compose = true
         buildConfig = true
     }
+    lint {
+        disable += "PropertyEscape"
+    }
 }
 
 ksp {
@@ -82,8 +85,15 @@ dependencies {
     implementation(platform(libs.supabase.bom))
     implementation(libs.supabase.postgrest)
     implementation(libs.supabase.auth)
+    implementation(libs.supabase.compose.auth)
+    implementation(libs.supabase.compose.auth.ui)
     implementation(libs.supabase.realtime)
     implementation(libs.supabase.storage)
+
+    // Credential Manager
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     // Ktor (required by Supabase SDK)
     implementation(libs.ktor.client.android)
@@ -103,15 +113,18 @@ dependencies {
     // DataStore
     implementation(libs.datastore.preferences)
 
+    // BeanShell (Offline Execution)
+    implementation("org.apache-extras.beanshell:bsh:2.0b6")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
 
-    // YouTube Video Player
-    implementation(libs.youtube.player)
+kotlin {
+    jvmToolchain(17)
 }

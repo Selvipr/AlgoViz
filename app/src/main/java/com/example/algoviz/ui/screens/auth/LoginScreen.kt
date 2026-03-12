@@ -57,6 +57,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.algoviz.ui.theme.DeepNavy
 import com.example.algoviz.ui.theme.MintAccent
 import com.example.algoviz.ui.theme.OrangeAccent
+import io.github.jan.supabase.compose.auth.composeAuth
+import io.github.jan.supabase.compose.auth.composable.NativeSignInResult
+import io.github.jan.supabase.compose.auth.composable.rememberSignInWithGoogle
 
 @Composable
 fun LoginScreen(
@@ -79,6 +82,27 @@ fun LoginScreen(
             else -> {}
         }
     }
+
+    val action = viewModel.supabaseClient.composeAuth.rememberSignInWithGoogle(
+        onResult = { result ->
+            when (result) {
+                is NativeSignInResult.Success -> {
+                    // ComposeAuth automatically handles sign-in with the ID token
+                }
+                is NativeSignInResult.ClosedByUser -> {}
+                is NativeSignInResult.Error -> {
+                    errorMessage = result.message
+                }
+                is NativeSignInResult.NetworkError -> {
+                    errorMessage = result.message
+                }
+            }
+        },
+        fallback = {
+            // Fallback to browser-based sign in
+            viewModel.signInWithGoogle("") // Assuming empty string as fallback triggers standard oauth
+        }
+    )
 
     Box(
         modifier = Modifier
@@ -295,7 +319,7 @@ fun LoginScreen(
             // Google Sign In
             OutlinedButton(
                 onClick = {
-                    viewModel.signInWithGoogle()
+                    action.startFlow()
                 },
                 modifier = Modifier
                     .fillMaxWidth()

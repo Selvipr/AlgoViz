@@ -11,8 +11,10 @@ import com.example.algoviz.ui.screens.home.HomeScreen
 import com.example.algoviz.ui.screens.learn.LearnScreen
 import com.example.algoviz.ui.screens.learn.LearnDetailScreen
 import com.example.algoviz.ui.screens.profile.ProfileScreen
+import com.example.algoviz.ui.screens.settings.SettingsScreen
 import com.example.algoviz.ui.screens.visualize.VisualizeScreen
 import com.example.algoviz.ui.screens.visualize.VisualizationPlayerScreen
+import com.example.algoviz.ui.screens.arena.ArenaDetailScreen
 
 @Composable
 fun AlgoVizNavHost(
@@ -54,6 +56,15 @@ fun AlgoVizNavHost(
             HomeScreen(
                 onNavigateToTopic = { topicId ->
                     navController.navigate(Screen.TopicDetail.createRoute(topicId))
+                },
+                onNavigateToArena = {
+                    navController.navigate(Screen.Arena.route)
+                },
+                onNavigateToProblem = { problemId ->
+                    navController.navigate(Screen.ProblemDetail.createRoute(problemId))
+                },
+                onNavigateToVisualize = { vizId ->
+                    navController.navigate(Screen.VisualizationPlayer.createRoute(vizId))
                 }
             )
         }
@@ -95,12 +106,29 @@ fun AlgoVizNavHost(
                 }
             )
         }
+        composable(Screen.ProblemDetail.route) { backStackEntry ->
+            val problemId = backStackEntry.arguments?.getString("problemId") ?: ""
+            ArenaDetailScreen(
+                problemId = problemId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
         composable(Screen.Profile.route) {
             ProfileScreen(
                 onNavigateToSettings = {
                     navController.navigate(Screen.Settings.route)
                 },
                 onLogoutSuccess = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(navController.graph.id) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(Screen.Settings.route) {
+            SettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToLogin = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(navController.graph.id) { inclusive = true }
                     }

@@ -79,13 +79,25 @@ class UserRepositoryImpl @Inject constructor(
         return try {
             val profile = getUserProfile(userId).getOrThrow()
             val newXp = profile.xp + amount
+            val newTier = calculateTier(newXp)
             supabaseClient.postgrest["users"]
-                .update(mapOf("xp" to newXp)) {
+                .update(mapOf("xp" to newXp, "tier" to newTier)) {
                     filter { eq("id", userId) }
                 }
             Result.success(newXp)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    private fun calculateTier(xp: Int): String {
+        return when {
+            xp >= 50000 -> "grandmaster"
+            xp >= 15000 -> "master"
+            xp >= 5000 -> "expert"
+            xp >= 1500 -> "practitioner"
+            xp >= 500 -> "learner"
+            else -> "novice"
         }
     }
 }

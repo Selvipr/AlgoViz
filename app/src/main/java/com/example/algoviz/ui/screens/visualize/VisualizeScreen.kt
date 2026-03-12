@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Animation
 import androidx.compose.material.icons.filled.BubbleChart
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CompareArrows
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sort
@@ -64,6 +65,8 @@ fun VisualizeScreen(
 ) {
     val categories = listOf("All", "Sorting", "Searching", "Graph", "Tree", "DP")
     var selectedCategory by remember { mutableStateOf("All") }
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchActive by remember { mutableStateOf(false) }
 
     val algorithms = remember {
         listOf(
@@ -80,8 +83,14 @@ fun VisualizeScreen(
         )
     }
 
-    val filteredAlgorithms = if (selectedCategory == "All") algorithms
-        else algorithms.filter { it.category == selectedCategory }
+    val filteredAlgorithms = algorithms.filter {
+        val matchesCategory = selectedCategory == "All" || it.category == selectedCategory
+        val matchesSearch = searchQuery.isBlank() || 
+            it.name.contains(searchQuery, ignoreCase = true) || 
+            it.category.contains(searchQuery, ignoreCase = true)
+        
+        matchesCategory && matchesSearch
+    }
 
     Column(
         modifier = Modifier
@@ -90,18 +99,44 @@ fun VisualizeScreen(
     ) {
         TopAppBar(
             title = {
-                Text(
-                    text = "Visualize",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                )
+                if (isSearchActive) {
+                    androidx.compose.material3.TextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Search visualizers...") },
+                        singleLine = true,
+                        colors = androidx.compose.material3.TextFieldDefaults.colors(
+                            focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                            unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                            disabledContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    Text(
+                        text = "Visualize",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             },
             actions = {
                 IconButton(onClick = {}) {
                     Icon(Icons.Filled.CompareArrows, contentDescription = "Compare")
                 }
-                IconButton(onClick = {}) {
-                    Icon(Icons.Filled.Search, contentDescription = "Search")
+                if (isSearchActive) {
+                    IconButton(onClick = { 
+                        isSearchActive = false
+                        searchQuery = ""
+                    }) {
+                        Icon(Icons.Filled.Close, contentDescription = "Close Search")
+                    }
+                } else {
+                    IconButton(onClick = { isSearchActive = true }) {
+                        Icon(Icons.Filled.Search, contentDescription = "Search")
+                    }
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(

@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import io.github.jan.supabase.SupabaseClient
+import com.example.algoviz.utils.ErrorSanitizer
 
 sealed class AuthState {
     object Idle : AuthState()
@@ -20,7 +22,8 @@ sealed class AuthState {
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    val supabaseClient: SupabaseClient
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
@@ -65,17 +68,17 @@ class AuthViewModel @Inject constructor(
             result.onSuccess { user ->
                 _authState.value = AuthState.Authenticated(user)
             }.onFailure { e ->
-                _authState.value = AuthState.Error(e.message ?: "Login failed")
+                _authState.value = AuthState.Error(ErrorSanitizer.sanitize(e as? Exception))
             }
         }
     }
 
-    fun signInWithGoogle() {
+    fun signInWithGoogle(idToken: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            val result = authRepository.signInWithGoogle()
+            val result = authRepository.signInWithGoogle(idToken)
             result.onFailure { e ->
-                _authState.value = AuthState.Error(e.message ?: "Google Sign-In failed")
+                _authState.value = AuthState.Error(ErrorSanitizer.sanitize(e as? Exception))
             }
         }
     }
@@ -87,7 +90,7 @@ class AuthViewModel @Inject constructor(
             result.onSuccess { user ->
                 _authState.value = AuthState.Authenticated(user)
             }.onFailure { e ->
-                _authState.value = AuthState.Error(e.message ?: "Signup failed")
+                _authState.value = AuthState.Error(ErrorSanitizer.sanitize(e as? Exception))
             }
         }
     }

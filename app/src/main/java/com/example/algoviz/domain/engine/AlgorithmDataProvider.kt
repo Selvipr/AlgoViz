@@ -16,7 +16,18 @@ object AlgorithmDataProvider {
             timeComplexity = "Worst: O(n²), Best: O(n) (if already sorted)",
             spaceComplexity = "O(1) Auxiliary Space",
             useCases = "Due to its poor O(n²) efficiency, it is rarely used in real-world large-scale applications. It does however remain a great educational tool for grasping array swapping conceptually.",
-            youtubeVideoId = "xli_FI7CuzA" // Bro Code Bubble Sort
+            youtubeVideoId = "xli_FI7CuzA", // Bro Code Bubble Sort
+            pseudoCode = """
+fun bubbleSort(arr):
+  for i from 0 to n - 1
+    for j from 0 to n - i - 1
+      if arr[j] > arr[j + 1]
+        swap(arr[j], arr[j + 1])
+      else
+        continue
+  break if no swaps
+return arr
+            """.trimIndent()
         ),
         "merge_sort" to AlgorithmInfo(
             title = "Merge Sort",
@@ -28,7 +39,15 @@ object AlgorithmDataProvider {
             timeComplexity = "Worst: O(n log n), Best: O(n log n)",
             spaceComplexity = "O(n) - Requires extra memory for the temporary arrays",
             useCases = "Excellent for sorting linked lists because it requires no random access. Widely used as the standard system sort in many languages (like Java's Collections.sort for objects) due to its mathematical stability.",
-            youtubeVideoId = "bOk35XmHPKs" // Bro Code Merge Sort
+            youtubeVideoId = "3j0SWDX4Z40", // CS50 Merge Sort
+            pseudoCode = """
+fun mergeSort(arr, l, r):
+  if l < r:
+    mid = l + (r - l) / 2
+    mergeSort(arr, l, mid)
+    mergeSort(arr, mid + 1, r)
+    merge(arr, l, mid, r)
+            """.trimIndent()
         ),
         "quick_sort" to AlgorithmInfo(
             title = "Quick Sort",
@@ -41,7 +60,24 @@ object AlgorithmDataProvider {
             timeComplexity = "Worst: O(n²) (rare), Average: O(n log n)",
             spaceComplexity = "O(log n) Call Stack Space",
             useCases = "Often the fastest practical sorting algorithm for in-memory arrays because its inner loop can be efficiently implemented on most architectures, and it operates entirely in-place.",
-            youtubeVideoId = "Vtckgz38QHs" // Bro Code Quick Sort
+            youtubeVideoId = "Hoixgm4-P4M", // HackerRank Quick Sort
+            pseudoCode = """
+fun quickSort(arr, low, high):
+  if low < high:
+    pivot = partition(arr, low, high)
+    quickSort(arr, low, pivot - 1)
+    quickSort(arr, pivot + 1, high)
+
+fun partition(arr, low, high):
+  pivot = arr[high]
+  i = low - 1
+  for j in low to high - 1:
+    if arr[j] < pivot:
+      i++
+      swap(arr[i], arr[j])
+  swap(arr[i + 1], arr[high])
+  return i + 1
+            """.trimIndent()
         ),
         "heap_sort" to AlgorithmInfo(
             title = "Heap Sort",
@@ -55,7 +91,30 @@ object AlgorithmDataProvider {
             timeComplexity = "Worst: O(n log n), Best: O(n log n)",
             spaceComplexity = "O(1) In-place",
             useCases = "Used when memory is tightly constrained or when a guaranteed worst-case O(n log n) is required without massive allocations (like in embedded systems).",
-            youtubeVideoId = "2DmK_H7IdTo" // Michael Sambol Heap Sort
+            youtubeVideoId = "2DmK_H7IdTo", // Michael Sambol Heap Sort
+            pseudoCode = """
+fun heapSort(arr):
+  buildMaxHeap(arr)
+  for i from n-1 down to 1:
+    swap(arr[0], arr[i])
+    heapify(arr, i, 0)
+
+fun buildMaxHeap(arr):
+  for i from n/2 - 1 down to 0:
+    heapify(arr, n, i)
+
+fun heapify(arr, n, i):
+  largest = i
+  l = 2*i + 1
+  r = 2*i + 2
+  if l < n and arr[l] > arr[largest]:
+    largest = l
+  if r < n and arr[r] > arr[largest]:
+    largest = r
+  if largest != i:
+    swap(arr[i], arr[largest])
+    heapify(arr, n, largest)
+            """.trimIndent()
         ),
         "binary_search" to AlgorithmInfo(
             title = "Binary Search",
@@ -69,7 +128,21 @@ object AlgorithmDataProvider {
             timeComplexity = "Worst: O(log n), Best: O(1)",
             spaceComplexity = "O(1) Iterative, O(log n) Recursive",
             useCases = "Massively useful for fast lookups in large, sorted databases or dictionaries. Reduces searching 1,000,000 items to just ~20 comparisons.",
-            youtubeVideoId = "vqwGwaDHaHA" // Bro Code Binary Search
+            youtubeVideoId = "P3YcBGdPOX4", // HackerRank Binary Search
+            pseudoCode = """
+fun binarySearch(arr, target):
+  low = 0
+  high = arr.size - 1
+  while low <= high:
+    mid = low + (high - low) / 2
+    if arr[mid] == target:
+      return mid
+    if arr[mid] < target:
+      low = mid + 1
+    else:
+      high = mid - 1
+  return -1
+            """.trimIndent()
         ),
         "linear_search" to AlgorithmInfo(
             title = "Linear Search",
@@ -82,7 +155,14 @@ object AlgorithmDataProvider {
             timeComplexity = "Worst: O(n), Best: O(1)",
             spaceComplexity = "O(1)",
             useCases = "Best for searching small lists, or completely unsorted data where pre-sorting is impossible or unfeasible.",
-            youtubeVideoId = "C46QfTjVCNU" // Bro Code Linear Search
+            youtubeVideoId = "CX2CYIJLwfg", // CS50 Linear Search
+            pseudoCode = """
+fun linearSearch(arr, target):
+  for i from 0 to arr.size - 1:
+    if arr[i] == target:
+      return i
+  return -1
+            """.trimIndent()
         ),
         "bfs" to AlgorithmInfo(
             title = "Breadth-First Search (BFS)",
@@ -97,7 +177,20 @@ object AlgorithmDataProvider {
             timeComplexity = "O(V + E) where V is vertices and E is edges",
             spaceComplexity = "O(V) for the Queue",
             useCases = "Finding the shortest path in unweighted networks, calculating peer-to-peer distances in social networks, and web crawlers.",
-            youtubeVideoId = "pcKY4hjDrxk" // Bro Code BFS
+            youtubeVideoId = "oDqjPvD54Ss", // WilliamFiset BFS Graph
+            pseudoCode = """
+fun bfs(graph, startNode):
+  queue = Queue()
+  visited = Set()
+  queue.enqueue(startNode)
+  visited.add(startNode)
+  while queue is not empty:
+    node = queue.dequeue()
+    for neighbor in graph[node]:
+      if neighbor not in visited:
+        visited.add(neighbor)
+        queue.enqueue(neighbor)
+            """.trimIndent()
         ),
         "dfs" to AlgorithmInfo(
             title = "Depth-First Search (DFS)",
@@ -111,7 +204,14 @@ object AlgorithmDataProvider {
             timeComplexity = "O(V + E)",
             spaceComplexity = "O(V) for the Stack / Memory Recursion",
             useCases = "Finding paths in mazes, topological sorting, and dependency resolutions (like analyzing package dependencies or build systems).",
-            youtubeVideoId = "bIA8HEJVdBA" // Bro Code DFS
+            youtubeVideoId = "7fujbpJ0LB4", // WilliamFiset DFS Graph
+            pseudoCode = """
+fun dfs(graph, startNode, visited = Set()):
+  visited.add(startNode)
+  for neighbor in graph[startNode]:
+    if neighbor not in visited:
+      dfs(graph, neighbor, visited)
+            """.trimIndent()
         ),
         "dijkstra" to AlgorithmInfo(
             title = "Dijkstra's Algorithm",
@@ -126,7 +226,21 @@ object AlgorithmDataProvider {
             timeComplexity = "O((V + E) log V)",
             spaceComplexity = "O(V)",
             useCases = "Google Maps route finding, IP routing protocols (OSPF), and calculating the mathematical optimal path across a complex network with weighted edges.",
-            youtubeVideoId = "XB4MIexjvY0" // Abdul Bari Dijkstra
+            youtubeVideoId = "pSqmAO-m7Lk", // Dijkstra's Computerphile
+            pseudoCode = """
+fun dijkstra(graph, startNode):
+  dist = Map()
+  for node in graph: dist[node] = infinity
+  dist[startNode] = 0
+  pq = PriorityQueue()
+  pq.add(startNode, 0)
+  while pq is not empty:
+    node = pq.extractMin()
+    for (neighbor, weight) in graph[node]:
+      if dist[node] + weight < dist[neighbor]:
+        dist[neighbor] = dist[node] + weight
+        pq.add(neighbor, dist[neighbor])
+            """.trimIndent()
         ),
         "bst_insert" to AlgorithmInfo(
             title = "Binary Search Tree Insertion",
@@ -140,7 +254,17 @@ object AlgorithmDataProvider {
             timeComplexity = "Worst: O(n) (unbalanced), Average: O(log n)",
             spaceComplexity = "O(1) Iterative, O(log n) Recursive",
             useCases = "Dynamic maps and sets where elements need to be perpetually added and immediately retrieved in a naturally sorted configuration without recreating massive contiguous arrays.",
-            youtubeVideoId = "r_n3gDjc0Wc" // Abdul Bari BST
+            youtubeVideoId = "i_Q0v_Ct5lY", // HackerRank BST
+            pseudoCode = """
+fun insert(root, key):
+  if root is null:
+    return Node(key)
+  if key < root.key:
+    root.left = insert(root.left, key)
+  else if key > root.key:
+    root.right = insert(root.right, key)
+  return root
+            """.trimIndent()
         )
     )
 }

@@ -49,7 +49,8 @@ class BFSVisualizer : AlgorithmVisualizer {
                     activePathEdges = emptySet(),
                     currentNode = null
                 ),
-                explanation = "Initializing Breadth-First Search. Starting at node $startNode."
+                explanation = "Initializing Breadth-First Search. Starting at node $startNode.",
+                activeLine = 2
             )
         )
 
@@ -66,7 +67,8 @@ class BFSVisualizer : AlgorithmVisualizer {
                     activePathEdges = activePathEdges.toSet(),
                     currentNode = startNode
                 ),
-                explanation = "Node $startNode is added to the queue and marked as visited."
+                explanation = "Node $startNode is added to the queue and marked as visited.",
+                activeLine = 4
             )
         )
 
@@ -83,7 +85,8 @@ class BFSVisualizer : AlgorithmVisualizer {
                         activePathEdges = activePathEdges.toSet(),
                         currentNode = curr
                     ),
-                    explanation = "Dequeue node $curr. Now exploring its neighbors."
+                    explanation = "Dequeue node $curr. Now exploring its neighbors.",
+                    activeLine = 7
                 )
             )
 
@@ -101,7 +104,8 @@ class BFSVisualizer : AlgorithmVisualizer {
                             activePathEdges = activePathEdges.toSet(),
                             currentNode = curr
                         ),
-                        explanation = "Looking at edge from $curr to $neighbor."
+                        explanation = "Looking at edge from $curr to $neighbor.",
+                        activeLine = 8
                     )
                 )
 
@@ -118,7 +122,8 @@ class BFSVisualizer : AlgorithmVisualizer {
                                 activePathEdges = activePathEdges.toSet(),
                                 currentNode = neighbor // Highlight the newly found neighbor temporarily
                             ),
-                            explanation = "Node $neighbor has not been visited. Marking it as visited and adding to queue."
+                            explanation = "Node $neighbor has not been visited. Marking it as visited and adding to queue.",
+                            activeLine = 10
                         )
                     )
                 } else {
@@ -131,7 +136,8 @@ class BFSVisualizer : AlgorithmVisualizer {
                                 activePathEdges = activePathEdges.toSet(),
                                 currentNode = curr
                             ),
-                            explanation = "Node $neighbor is already visited. Skipping."
+                            explanation = "Node $neighbor is already visited. Skipping.",
+                            activeLine = 9
                         )
                     )
                 }
