@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DataArray
 import androidx.compose.material.icons.filled.Hub
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
@@ -50,6 +51,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.algoviz.ui.theme.InfoBlue
 import com.example.algoviz.ui.theme.MintAccent
 import com.example.algoviz.ui.theme.OrangeAccent
@@ -65,7 +68,9 @@ data class AlgorithmCategory(
 @Composable
 fun LearnScreen(
     onNavigateToTopic: (String) -> Unit = {},
+    onNavigateToBrowser: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     val categories = remember {
         listOf(
             AlgorithmCategory(
@@ -149,6 +154,9 @@ fun LearnScreen(
                         Icon(Icons.Filled.Close, contentDescription = "Close Search")
                     }
                 } else {
+                    IconButton(onClick = onNavigateToBrowser) {
+                        Icon(Icons.Filled.Language, contentDescription = "Explore the Web")
+                    }
                     IconButton(onClick = { isSearchActive = true }) {
                         Icon(Icons.Filled.Search, contentDescription = "Search")
                     }

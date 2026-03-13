@@ -15,6 +15,7 @@ import com.example.algoviz.ui.screens.settings.SettingsScreen
 import com.example.algoviz.ui.screens.visualize.VisualizeScreen
 import com.example.algoviz.ui.screens.visualize.VisualizationPlayerScreen
 import com.example.algoviz.ui.screens.arena.ArenaDetailScreen
+import com.example.algoviz.ui.screens.browser.BrowserScreen
 
 @Composable
 fun AlgoVizNavHost(
@@ -72,6 +73,9 @@ fun AlgoVizNavHost(
             LearnScreen(
                 onNavigateToTopic = { topicId ->
                     navController.navigate(Screen.TopicDetail.createRoute(topicId))
+                },
+                onNavigateToBrowser = {
+                    navController.navigate(Screen.Browser.route)
                 }
             )
         }
@@ -133,6 +137,11 @@ fun AlgoVizNavHost(
                         popUpTo(navController.graph.id) { inclusive = true }
                     }
                 }
+            )
+        }
+        composable(Screen.Browser.route) {
+            BrowserScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

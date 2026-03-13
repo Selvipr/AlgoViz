@@ -31,4 +31,5 @@ sealed class Screen(val route: String) {
     data object AIChat : Screen("ai_chat")
     data object Settings : Screen("settings")
     data object Leaderboard : Screen("leaderboard")
+    data object Browser : Screen("browser")
 }
