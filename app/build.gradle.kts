@@ -113,6 +113,13 @@ dependencies {
     // DataStore
     implementation(libs.datastore.preferences)
 
+    // Security & Biometrics
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.security.crypto)
+
+    // Location
+    implementation(libs.play.services.location)
+
     // BeanShell (Offline Execution)
     implementation("org.apache-extras.beanshell:bsh:2.0b6")
 

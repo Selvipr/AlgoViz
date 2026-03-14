@@ -61,4 +61,20 @@ class ProfileViewModel @Inject constructor(
             authRepository.signOut()
         }
     }
+
+    fun updateProfile(updatedUser: User) {
+        viewModelScope.launch {
+            _uiState.update { ProfileUiState.Loading }
+            try {
+                val result = userRepository.updateUserProfile(updatedUser)
+                result.onSuccess { user ->
+                    _uiState.update { ProfileUiState.Success(user) }
+                }.onFailure { e ->
+                    _uiState.update { ProfileUiState.Error(ErrorSanitizer.sanitize(e as? Exception)) }
+                }
+            } catch (e: Exception) {
+               _uiState.update { ProfileUiState.Error(ErrorSanitizer.sanitize(e)) }
+            }
+        }
+    }
 }

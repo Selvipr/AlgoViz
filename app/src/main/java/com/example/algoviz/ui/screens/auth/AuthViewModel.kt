@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.example.algoviz.data.local.SecureStorage
 import io.github.jan.supabase.SupabaseClient
 import com.example.algoviz.utils.ErrorSanitizer
 
@@ -23,7 +24,8 @@ sealed class AuthState {
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    val supabaseClient: SupabaseClient
+    val supabaseClient: SupabaseClient,
+    val secureStorage: SecureStorage
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
@@ -61,11 +63,22 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun signIn(email: String, password: String) {
+    fun attemptBiometricLogin() {
+        if (secureStorage.hasCredentials()) {
+            val email = secureStorage.getEmail() ?: return
+            val password = secureStorage.getPassword() ?: return
+            signIn(email, password)
+        }
+    }
+
+    fun signIn(email: String, password: String, enableBiometrics: Boolean = false) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             val result = authRepository.signIn(email, password)
             result.onSuccess { user ->
+                if (enableBiometrics) {
+                    secureStorage.saveBiometricCredentials(email, password)
+                }
                 _authState.value = AuthState.Authenticated(user)
             }.onFailure { e ->
                 _authState.value = AuthState.Error(ErrorSanitizer.sanitize(e as? Exception))
@@ -83,11 +96,14 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun signUp(email: String, password: String, username: String) {
+    fun signUp(email: String, password: String, username: String, enableBiometrics: Boolean = false) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             val result = authRepository.signUp(email, password, username)
             result.onSuccess { user ->
+                if (enableBiometrics) {
+                    secureStorage.saveBiometricCredentials(email, password)
+                }
                 _authState.value = AuthState.Authenticated(user)
             }.onFailure { e ->
                 _authState.value = AuthState.Error(ErrorSanitizer.sanitize(e as? Exception))
@@ -99,6 +115,7 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             authRepository.signOut()
+            secureStorage.clearCredentials()
             _authState.value = AuthState.Idle
         }
     }

@@ -32,6 +32,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,9 +55,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.algoviz.ui.theme.DeepNavy
 import com.example.algoviz.ui.theme.MintAccent
 import com.example.algoviz.ui.theme.OrangeAccent
+import com.example.algoviz.utils.BiometricHelper
 import io.github.jan.supabase.compose.auth.composeAuth
 import io.github.jan.supabase.compose.auth.composable.NativeSignInResult
 import io.github.jan.supabase.compose.auth.composable.rememberSignInWithGoogle
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun SignupScreen(
@@ -100,6 +104,10 @@ fun SignupScreen(
             viewModel.signInWithGoogle("")
         }
     )
+
+    val context = LocalContext.current
+    val isBiometricSupported = remember { BiometricHelper.isBiometricSupported(context) }
+    var enableBiometrics by remember { mutableStateOf(isBiometricSupported) }
 
     Box(
         modifier = Modifier
@@ -266,6 +274,31 @@ fun SignupScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Biometric Opt-in Switch
+            if (isBiometricSupported) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Enable Biometric Login for next time",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Switch(
+                        checked = enableBiometrics,
+                        onCheckedChange = { enableBiometrics = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = DeepNavy,
+                            checkedTrackColor = MintAccent,
+                            uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        )
+                    )
+                }
+            }
+
             // Sign Up button
             Button(
                 onClick = {
@@ -273,7 +306,7 @@ fun SignupScreen(
                         errorMessage = "Passwords do not match"
                         return@Button
                     }
-                    viewModel.signUp(email, password, username)
+                    viewModel.signUp(email, password, username, enableBiometrics)
                 },
                 modifier = Modifier
                     .fillMaxWidth()

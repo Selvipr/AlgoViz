@@ -34,6 +34,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,9 +59,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.algoviz.ui.theme.DeepNavy
 import com.example.algoviz.ui.theme.MintAccent
 import com.example.algoviz.ui.theme.OrangeAccent
+import com.example.algoviz.utils.BiometricHelper
 import io.github.jan.supabase.compose.auth.composeAuth
 import io.github.jan.supabase.compose.auth.composable.NativeSignInResult
 import io.github.jan.supabase.compose.auth.composable.rememberSignInWithGoogle
+import androidx.compose.ui.platform.LocalContext
+import androidx.fragment.app.FragmentActivity
+import androidx.compose.material.icons.filled.Fingerprint
 
 @Composable
 fun LoginScreen(
@@ -103,6 +109,30 @@ fun LoginScreen(
             viewModel.signInWithGoogle("") // Assuming empty string as fallback triggers standard oauth
         }
     )
+
+    val context = LocalContext.current
+    val isBiometricSupported = remember { BiometricHelper.isBiometricSupported(context) }
+    var enableBiometrics by remember { mutableStateOf(isBiometricSupported) }
+    var hasAttemptedBiometrics by remember { mutableStateOf(false) }
+
+    // Trigger biometrics instantly on open if credentials exist
+    LaunchedEffect(Unit) {
+        if (!hasAttemptedBiometrics && viewModel.secureStorage.hasCredentials() && isBiometricSupported) {
+            hasAttemptedBiometrics = true
+            val fragmentActivity = context as? FragmentActivity
+            if (fragmentActivity != null) {
+                BiometricHelper.showBiometricPrompt(
+                    activity = fragmentActivity,
+                    onSuccess = {
+                        viewModel.attemptBiometricLogin()
+                    },
+                    onError = { err ->
+                        errorMessage = err
+                    }
+                )
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -258,10 +288,35 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Biometric Opt-in Switch
+            if (isBiometricSupported) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Enable Biometric Login for next time",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Switch(
+                        checked = enableBiometrics,
+                        onCheckedChange = { enableBiometrics = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = DeepNavy,
+                            checkedTrackColor = MintAccent,
+                            uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        )
+                    )
+                }
+            }
+
             // Login button
             Button(
                 onClick = {
-                    viewModel.signIn(email, password)
+                    viewModel.signIn(email, password, enableBiometrics)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -331,6 +386,42 @@ fun LoginScreen(
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium,
                 )
+            }
+
+            // Biometric Optional Manual Button
+            if (isBiometricSupported) {
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedButton(
+                    onClick = {
+                        if (viewModel.secureStorage.hasCredentials()) {
+                            val fragmentActivity = context as? FragmentActivity
+                            if (fragmentActivity != null) {
+                                BiometricHelper.showBiometricPrompt(
+                                    activity = fragmentActivity,
+                                    onSuccess = {
+                                        viewModel.attemptBiometricLogin()
+                                    },
+                                    onError = { err ->
+                                        errorMessage = err
+                                    }
+                                )
+                            }
+                        } else {
+                            errorMessage = "Please log in with your Email and Password first to setup Biometrics."
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                ) {
+                    Icon(Icons.Filled.Fingerprint, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+                    Text(
+                        text = "Sign in with Biometrics",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))

@@ -53,6 +53,7 @@ import com.example.algoviz.domain.engine.ArenaProblem
 @Composable
 fun ArenaScreen(
     onNavigateToProblem: (String) -> Unit = {},
+    onNavigateToLeaderboard: () -> Unit = {},
 ) {
     val difficulties = listOf("All", "Easy", "Medium", "Hard")
     var selectedDifficulty by remember { mutableStateOf("All") }
@@ -109,7 +110,7 @@ fun ArenaScreen(
                         Icon(Icons.Filled.Close, contentDescription = "Close Search")
                     }
                 } else {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = onNavigateToLeaderboard) {
                         Icon(Icons.Filled.EmojiEvents, contentDescription = "Leaderboard")
                     }
                     IconButton(onClick = { isSearchActive = true }) {

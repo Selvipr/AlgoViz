@@ -9,6 +9,10 @@ import com.example.algoviz.domain.repository.BrowserHistoryRepository
 import com.example.algoviz.domain.repository.SettingsRepository
 import com.example.algoviz.domain.repository.TopicRepository
 import com.example.algoviz.domain.repository.UserRepository
+import com.example.algoviz.domain.repository.SarvamRepository
+import com.example.algoviz.domain.repository.AiSessionRepository
+import com.example.algoviz.data.repository.SarvamRepositoryImpl
+import com.example.algoviz.data.repository.AiSessionRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -38,4 +42,12 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindBrowserHistoryRepository(impl: com.example.algoviz.data.repository.BrowserHistoryRepositoryImpl): BrowserHistoryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSarvamRepository(impl: SarvamRepositoryImpl): SarvamRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAiSessionRepository(impl: AiSessionRepositoryImpl): AiSessionRepository
 }

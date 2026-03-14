@@ -20,9 +20,12 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CompareArrows
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.CompareArrows
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Card
@@ -34,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +58,8 @@ import com.example.algoviz.ui.theme.XPGold
 fun HomeScreen(
     onNavigateToTopic: (String) -> Unit = {},
     onNavigateToArena: () -> Unit = {},
+    onNavigateToCompare: () -> Unit = {},
+    onNavigateToAssistant: () -> Unit = {},
     onNavigateToProblem: (String) -> Unit = {},
     onNavigateToVisualize: (String) -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
@@ -84,13 +90,31 @@ fun HomeScreen(
                 }
             }
             is HomeUiState.Success -> {
-                HomeContent(
-                    user = state.user,
-                    onNavigateToTopic = onNavigateToTopic,
-                    onNavigateToArena = onNavigateToArena,
-                    onNavigateToProblem = onNavigateToProblem,
-                    onNavigateToVisualize = onNavigateToVisualize
-                )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    HomeContent(
+                        user = state.user,
+                        onNavigateToTopic = onNavigateToTopic,
+                        onNavigateToArena = onNavigateToArena,
+                        onNavigateToCompare = onNavigateToCompare,
+                        onNavigateToProblem = onNavigateToProblem,
+                        onNavigateToVisualize = onNavigateToVisualize
+                    )
+                    
+                    // Chatbot Floating entry point
+                    androidx.compose.material3.FloatingActionButton(
+                        onClick = onNavigateToAssistant,
+                        containerColor = MintAccent,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 16.dp, bottom = 90.dp)
+                    ) {
+                        androidx.compose.material3.Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Filled.AutoAwesome,
+                            contentDescription = "Talk to Sarvam AI",
+                            tint = androidx.compose.ui.graphics.Color.White
+                        )
+                    }
+                }
             }
         }
     }
@@ -101,6 +125,7 @@ private fun HomeContent(
     user: User,
     onNavigateToTopic: (String) -> Unit,
     onNavigateToArena: () -> Unit,
+    onNavigateToCompare: () -> Unit,
     onNavigateToProblem: (String) -> Unit,
     onNavigateToVisualize: (String) -> Unit
 ) {
@@ -137,6 +162,7 @@ private fun HomeContent(
             QuickActionsSection(
                 onResumeLesson = { onNavigateToTopic("searching") },
                 onTodayContest = onNavigateToArena,
+                onCompare = onNavigateToCompare,
                 onRandomProblem = {
                     val randomProblemId = listOf("binary_search", "bubble_sort", "valid_parentheses", "single_number").random()
                     onNavigateToProblem(randomProblemId)
@@ -160,13 +186,21 @@ private fun HomeContent(
 
 @Composable
 private fun GreetingSection(name: String) {
+    val currentHour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
+    val greeting = when (currentHour) {
+        in 0..11 -> "Good morning 🌅"
+        in 12..16 -> "Good afternoon ☀️"
+        in 17..20 -> "Good evening 🌆"
+        else -> "Good night 🌙"
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 48.dp),
     ) {
         Text(
-            text = "Good evening 👋",
+            text = greeting,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -337,6 +371,7 @@ private fun Chip(text: String, color: androidx.compose.ui.graphics.Color) {
 private fun QuickActionsSection(
     onResumeLesson: () -> Unit,
     onTodayContest: () -> Unit,
+    onCompare: () -> Unit,
     onRandomProblem: () -> Unit
 ) {
     Column {
@@ -364,6 +399,13 @@ private fun QuickActionsSection(
                 title = "Today's\nContest",
                 color = OrangeAccent,
                 onClick = onTodayContest
+            )
+            QuickActionCard(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Filled.CompareArrows,
+                title = "Compare\nAlgos",
+                color = androidx.compose.ui.graphics.Color(0xFF8A2BE2),
+                onClick = onCompare
             )
             QuickActionCard(
                 modifier = Modifier.weight(1f),

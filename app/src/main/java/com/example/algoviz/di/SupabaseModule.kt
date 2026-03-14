@@ -16,10 +16,19 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
 import javax.inject.Singleton
+import android.content.Context
+import com.example.algoviz.data.local.SecureStorage
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 @Module
 @InstallIn(SingletonComponent::class)
 object SupabaseModule {
+
+    @Provides
+    @Singleton
+    fun provideSecureStorage(@ApplicationContext context: Context): SecureStorage {
+        return SecureStorage(context)
+    }
 
     @Provides
     @Singleton

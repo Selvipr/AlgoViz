@@ -34,6 +34,23 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getTopUsersFlow(limit: Int): Flow<Result<List<User>>> = flow {
+        while (true) {
+            try {
+                val result = supabaseClient.postgrest["users"]
+                    .select {
+                        order("xp", io.github.jan.supabase.postgrest.query.Order.DESCENDING)
+                        limit(count = limit.toLong())
+                    }
+                    .decodeList<UserProfileDto>()
+                emit(Result.success(result.map { it.toDomain() }))
+            } catch (e: Exception) {
+                emit(Result.failure(e))
+            }
+            delay(10000) // Poll every 10 seconds for leaderboard
+        }
+    }
+
     override suspend fun updateUserProfile(user: User): Result<User> {
         return try {
             supabaseClient.postgrest["users"]

@@ -46,12 +46,36 @@ import com.example.algoviz.ui.theme.OrangeAccent
 import com.example.algoviz.ui.theme.StreakFlame
 import com.example.algoviz.ui.theme.TierNovice
 import com.example.algoviz.ui.theme.XPGold
+import com.example.algoviz.ui.theme.XPGold
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.algoviz.domain.model.User
 import androidx.compose.animation.core.*
 import androidx.compose.ui.draw.scale
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.foundation.clickable
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.Manifest
+import com.example.algoviz.utils.LocationHelper
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,6 +85,11 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var isEditing by remember { mutableStateOf(false) }
+    
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -129,6 +158,19 @@ fun ProfileScreen(
                         // Achievements
                         item {
                             AchievementsSection()
+                        }
+
+                        // Extended Profile Details
+                        item {
+                            ProfileDetailsSection(
+                                user = user,
+                                isEditing = isEditing,
+                                onEditModeChanged = { isEditing = it },
+                                onSaveProfile = { updatedUser ->
+                                    viewModel.updateProfile(updatedUser)
+                                    isEditing = false
+                                }
+                            )
                         }
 
                         // Logout Button
@@ -442,6 +484,270 @@ private fun AchievementBadge(
                     MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 else MaterialTheme.colorScheme.onSurface,
             )
+        }
+    }
+}
+
+@Composable
+private fun ProfileDetailsSection(
+    user: User,
+    isEditing: Boolean,
+    onEditModeChanged: (Boolean) -> Unit,
+    onSaveProfile: (User) -> Unit
+) {
+    var fullName by remember(user) { mutableStateOf(user.fullName ?: "") }
+    var bio by remember(user) { mutableStateOf(user.bio ?: "") }
+    var college by remember(user) { mutableStateOf(user.college ?: "") }
+    var location by remember(user) { mutableStateOf(user.location ?: "") }
+    var githubUrl by remember(user) { mutableStateOf(user.githubUrl ?: "") }
+    var linkedinUrl by remember(user) { mutableStateOf(user.linkedinUrl ?: "") }
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var isLoadingLocation by remember { mutableStateOf(false) }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            isLoadingLocation = true
+            coroutineScope.launch {
+                val result = LocationHelper.getCurrentLocationAsText(context)
+                result.onSuccess { loc ->
+                    location = loc
+                }
+                isLoadingLocation = false
+            }
+        }
+    }
+
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "About Me",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                if (!isEditing) {
+                    IconButton(onClick = { onEditModeChanged(true) }) {
+                        Icon(Icons.Filled.Edit, contentDescription = "Edit Profile", tint = MintAccent)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (isEditing) {
+                OutlinedTextField(
+                    value = fullName,
+                    onValueChange = { fullName = it },
+                    label = { Text("Full Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MintAccent,
+                        focusedLabelColor = MintAccent
+                    )
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = bio,
+                    onValueChange = { bio = it },
+                    label = { Text("Bio") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MintAccent,
+                        focusedLabelColor = MintAccent
+                    )
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = college,
+                    onValueChange = { college = it },
+                    label = { Text("College / University") },
+                    leadingIcon = { Icon(Icons.Filled.Business, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MintAccent,
+                        focusedLabelColor = MintAccent
+                    )
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = location,
+                        onValueChange = { location = it },
+                        label = { Text("Location") },
+                        modifier = Modifier.weight(1f),
+                        leadingIcon = { Icon(Icons.Filled.LocationOn, contentDescription = null) },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MintAccent,
+                            focusedLabelColor = MintAccent
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(
+                        onClick = {
+                            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                        },
+                        modifier = Modifier
+                            .size(52.dp)
+                            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
+                    ) {
+                        if (isLoadingLocation) {
+                            androidx.compose.material3.CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MintAccent,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(Icons.Filled.LocationOn, contentDescription = "Get GPS Location", tint = MintAccent)
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = githubUrl,
+                    onValueChange = { githubUrl = it },
+                    label = { Text("GitHub URL") },
+                    leadingIcon = { Icon(Icons.Filled.Link, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MintAccent,
+                        focusedLabelColor = MintAccent
+                    )
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = linkedinUrl,
+                    onValueChange = { linkedinUrl = it },
+                    label = { Text("LinkedIn URL") },
+                    leadingIcon = { Icon(Icons.Filled.Link, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MintAccent,
+                        focusedLabelColor = MintAccent
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = { 
+                        // Reset fields by re-initializing from user object
+                        fullName = user.fullName ?: ""
+                        bio = user.bio ?: ""
+                        college = user.college ?: ""
+                        location = user.location ?: ""
+                        githubUrl = user.githubUrl ?: ""
+                        linkedinUrl = user.linkedinUrl ?: ""
+                        onEditModeChanged(false) 
+                    }) {
+                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            val updated = user.copy(
+                                fullName = fullName,
+                                bio = bio,
+                                college = college,
+                                location = location,
+                                githubUrl = githubUrl,
+                                linkedinUrl = linkedinUrl
+                            )
+                            onSaveProfile(updated)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MintAccent),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Save Details", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
+                    }
+                }
+            } else {
+                // VIEW MODE
+                val uriHandler = LocalUriHandler.current
+
+                if (!user.bio.isNullOrBlank()) {
+                    Text(
+                        text = user.bio,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                }
+
+                if (!user.college.isNullOrBlank()) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 8.dp)) {
+                        Icon(Icons.Filled.Business, contentDescription = "College", tint = MintAccent, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = user.college, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                    }
+                }
+
+                if (!user.location.isNullOrBlank()) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 12.dp)) {
+                        Icon(Icons.Filled.LocationOn, contentDescription = "Location", tint = MintAccent, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = user.location, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                    }
+                }
+
+                if (!user.githubUrl.isNullOrBlank() || !user.linkedinUrl.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        if (!user.githubUrl.isNullOrBlank()) {
+                            Text(
+                                text = "GitHub",
+                                color = MintAccent,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clickable {
+                                    try { uriHandler.openUri(user.githubUrl) } catch (e: Exception) {}
+                                }.padding(vertical = 4.dp)
+                            )
+                        }
+                        if (!user.linkedinUrl.isNullOrBlank()) {
+                            Text(
+                                text = "LinkedIn",
+                                color = MintAccent,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clickable {
+                                    try { uriHandler.openUri(user.linkedinUrl) } catch (e: Exception) {}
+                                }.padding(vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+                
+                // If completely empty, show placeholder
+                if (user.bio.isNullOrBlank() && user.college.isNullOrBlank() && user.location.isNullOrBlank() 
+                    && user.githubUrl.isNullOrBlank() && user.linkedinUrl.isNullOrBlank()) {
+                    Text(
+                        text = "Your profile is looking a bit empty! Click Edit Profile to add college, location and socials.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+            }
         }
     }
 }

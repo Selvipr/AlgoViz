@@ -32,4 +32,11 @@ sealed class Screen(val route: String) {
     data object Settings : Screen("settings")
     data object Leaderboard : Screen("leaderboard")
     data object Browser : Screen("browser")
+    data object Compare : Screen("compare")
+    data object PublicProfile : Screen("public_profile/{userId}") {
+        fun createRoute(userId: String) = "public_profile/$userId"
+    }
+    data object Canvas : Screen("canvas/{messageId}/{artifactIndex}") {
+        fun createRoute(messageId: String, artifactIndex: Int) = "canvas/$messageId/$artifactIndex"
+    }
 }

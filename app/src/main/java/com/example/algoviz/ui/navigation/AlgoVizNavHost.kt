@@ -11,11 +11,20 @@ import com.example.algoviz.ui.screens.home.HomeScreen
 import com.example.algoviz.ui.screens.learn.LearnScreen
 import com.example.algoviz.ui.screens.learn.LearnDetailScreen
 import com.example.algoviz.ui.screens.profile.ProfileScreen
-import com.example.algoviz.ui.screens.settings.SettingsScreen
 import com.example.algoviz.ui.screens.visualize.VisualizeScreen
+import com.example.algoviz.ui.screens.settings.SettingsScreen
 import com.example.algoviz.ui.screens.visualize.VisualizationPlayerScreen
 import com.example.algoviz.ui.screens.arena.ArenaDetailScreen
+import com.example.algoviz.ui.screens.ai.AiChatScreen
+import com.example.algoviz.ui.screens.ai.CanvasScreen
 import com.example.algoviz.ui.screens.browser.BrowserScreen
+import com.example.algoviz.ui.screens.compare.CompareScreen
+import com.example.algoviz.ui.screens.arena.LeaderboardScreen
+import com.example.algoviz.ui.screens.profile.PublicProfileScreen
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.algoviz.ui.screens.ai.AiChatViewModel
 
 @Composable
 fun AlgoVizNavHost(
@@ -60,6 +69,12 @@ fun AlgoVizNavHost(
                 },
                 onNavigateToArena = {
                     navController.navigate(Screen.Arena.route)
+                },
+                onNavigateToAssistant = {
+                    navController.navigate(Screen.AIChat.route)
+                },
+                onNavigateToCompare = {
+                    navController.navigate(Screen.Compare.route)
                 },
                 onNavigateToProblem = { problemId ->
                     navController.navigate(Screen.ProblemDetail.createRoute(problemId))
@@ -107,6 +122,9 @@ fun AlgoVizNavHost(
             ArenaScreen(
                 onNavigateToProblem = { problemId ->
                     navController.navigate(Screen.ProblemDetail.createRoute(problemId))
+                },
+                onNavigateToLeaderboard = {
+                    navController.navigate(Screen.Leaderboard.route)
                 }
             )
         }
@@ -141,6 +159,57 @@ fun AlgoVizNavHost(
         }
         composable(Screen.Browser.route) {
             BrowserScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.Leaderboard.route) {
+            LeaderboardScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPublicProfile = { userId ->
+                    navController.navigate(Screen.PublicProfile.createRoute(userId))
+                }
+            )
+        }
+        composable(Screen.PublicProfile.route) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            PublicProfileScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.Compare.route) {
+            CompareScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.AIChat.route) { backStackEntry ->
+            val chatViewModel: AiChatViewModel = hiltViewModel()
+            AiChatScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToCanvas = { messageId, artifactIndex ->
+                    navController.navigate(Screen.Canvas.createRoute(messageId, artifactIndex))
+                },
+                viewModel = chatViewModel
+            )
+        }
+        composable(
+            route = Screen.Canvas.route,
+            arguments = listOf(
+                navArgument("messageId") { type = NavType.StringType },
+                navArgument("artifactIndex") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val messageId = backStackEntry.arguments?.getString("messageId") ?: ""
+            val artifactIndex = backStackEntry.arguments?.getInt("artifactIndex") ?: 0
+            // Get the parent AIChat backstack entry to share the ViewModel
+            val parentEntry = navController.getBackStackEntry(Screen.AIChat.route)
+            val chatViewModel: AiChatViewModel = hiltViewModel(parentEntry)
+            val uiState = chatViewModel.uiState.value
+            val artifact = uiState.session?.messages_json
+                ?.find { it.id == messageId }
+                ?.artifacts
+                ?.getOrNull(artifactIndex)
+            CanvasScreen(
+                artifact = artifact,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
